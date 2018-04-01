@@ -7,6 +7,8 @@
 
 import UIKit
 import SnapKit
+import RxSwift
+import RxCocoa
 
 protocol MainDisplayLogic: class {
   
@@ -27,6 +29,9 @@ class MainViewController: UIViewController, MainDisplayLogic {
     private let emailTextFieldPlaceholder = "E-mail"
     private let passwordTextFieldPlaceholder = "Password"
     private let logInButtonTitle = "Log in"
+    // Private properties
+    private var logInData = LogInData()
+    private let disposeBag = DisposeBag()
     
     // MARK: Setup
   
@@ -71,6 +76,7 @@ class MainViewController: UIViewController, MainDisplayLogic {
     
     private func configureEmailTextField(){
         emailTextField.placeholder = emailTextFieldPlaceholder
+        _  = emailTextField.rx.text.map { $0 ?? "" }.bind(to: logInData.email)
         configureTextFieldCommon(emailTextField)
     }
     
@@ -97,6 +103,7 @@ class MainViewController: UIViewController, MainDisplayLogic {
     private func configurePasswordTextField(){
         passwordTextField.placeholder = passwordTextFieldPlaceholder
         passwordTextField.isSecureTextEntry = true
+        _ = passwordTextField.rx.text.map { $0 ?? "" }.bind(to: logInData.password)
         configureTextFieldCommon(passwordTextField)
     }
     
@@ -119,6 +126,9 @@ class MainViewController: UIViewController, MainDisplayLogic {
         logInButton.setTitle(logInButtonTitle, for: .normal)
         logInButton.setTitleColor(UIColor.black, for: .normal)
         logInButton.backgroundColor = UIColor.green
+        logInData.isValid.subscribe(onNext: {[unowned self] valid in
+            self.logInButton.isHidden = !valid
+        }).disposed(by: disposeBag)
     }
     
     private func addConstraintsToLogInButton(){
